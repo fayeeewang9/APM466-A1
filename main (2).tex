@@ -1,0 +1,129 @@
+\documentclass[10pt]{article}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{titling}
+\setlength{\droptitle}{-1.2cm}
+\usepackage{setspace}
+\setstretch{1}
+
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{6pt}{4pt}
+\titlespacing*{\subsection}{0pt}{5pt}{3pt}
+
+
+\title{\vspace{-0.5cm}\Large APM466 Assignment 1}
+\author{Yufei Wang}
+
+\begin{document}
+
+\maketitle
+
+\section*{2.2 Empirical Questions}
+
+\subsection*{Question 4(a): Yield to Maturity Curves (10 points)}
+For each of the selected 10 Government of Canada bonds, we calculate the yield to maturity (YTM) for each trading day.
+All bonds pay semi-annual coupons, so we compute YTM on a semi-annual compounding basis.
+For each bond and date, the YTM is obtained numerically by solving the bond pricing equation using a bisection method.
+Figure~\ref{fig:ytm} shows the 5-year yield curves for each trading day, with all curves plotted on the same graph.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{YTM curve.png}
+\caption{Yield to maturity curves constructed from Government of Canada bond prices over the 10-day sample period.}
+\label{fig:ytm}
+\end{figure}
+
+\subsection*{Question 4(b): Spot Curve Construction (15 points)}
+\textbf{Pseudo-code (bootstrapping):}
+\begin{enumerate}
+\item Start with the shortest maturity bond.
+\item For the first bond, solve directly for the spot rate using its price and cash flow.
+\item Move to the next maturity bond.
+\item Discount all earlier coupon payments using previously bootstrapped spot rates.
+\item Solve for the new spot rate so that the present value equals the observed bond price.
+\item Repeat until spot rates for maturities from 1 to 5 years are obtained.
+\end{enumerate}
+
+This procedure is applied separately for each trading day.\\
+
+Figure~\ref{fig:spot} shows the 5-year spot curves for all dates.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.7\textwidth]{spot curve.png}
+\caption{Bootstrapped spot rate curves implied by Government of Canada bond prices.}
+\label{fig:spot}
+\end{figure}
+
+\subsection*{Question 4(c): Forward Rate Curves (15 points)}
+\textbf{Pseudo-code (forward rates from spot rates):}
+\begin{enumerate}
+\item Choose two maturities $t$ and $t+n$ with corresponding spot rates.
+\item Use the continuous compounding forward rate formula:
+\[
+F_{t,t+n}=\frac{S_{t+n}(t+n)-S_t t}{n}.
+\]
+\item Compute the implied forward rate for the period from $t$ to $t+n$.
+\item Repeat for all required maturities.
+\item Apply the same steps for each trading day.
+\end{enumerate}
+
+In our implementation, we compute 3-month forward rates derived from the spot curves.
+Figure~\ref{fig:forward} shows the forward curves for all dates.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.7\textwidth]{forward curve.png}
+\caption{Three-month forward rate curves derived from bootstrapped spot rates.}
+\label{fig:forward}
+\end{figure}
+
+\subsection*{Question 4(d): Covariance Structure and Principal Components}
+
+We first study the covariance structure of yields across different maturities. Using the panel of yield-to-maturity data, we compute two covariance matrices: one based on yield levels, and one based on daily yield changes. The covariance matrix of yield levels shows strong positive comovement across all maturities. This indicates that yields at different maturities tend to move together in levels, reflecting common long-run interest rate factors. In contrast, the covariance matrix of yield changes is smaller in magnitude and more concentrated along the diagonal. This suggests that short-run daily yield movements are less correlated across maturities than yield levels.
+
+We then apply principal component analysis (PCA) to the covariance matrix of yield changes. The first three principal components explain the majority of the total variation in yield changes. In particular, the first principal component alone explains about 59\% of the total variance, while the first two components together explain more than 80\%. This implies that yield curve movements are largely driven by a small number of common factors.
+
+The loadings of the first principal component are similar across maturities, indicating a parallel shift of the yield curve. This factor can be interpreted as a level factor. The second principal component shows opposite signs between short and long maturities, corresponding to changes in the slope of the yield curve. The third principal component captures more localized movements and curvature
+effects, but explains a much smaller fraction of total variance. Overall, the PCA results confirm that most yield curve dynamics can be described by a small number of common factors, with level and slope effects playing the
+dominant roles.
+
+\subsection*{Question 5: Covariance Matrices (15 points)}
+We construct two covariance matrices using the 10-day sample of yields:
+(i) the covariance matrix of yield levels, and
+(ii) the covariance matrix of daily yield changes.
+
+Daily yield changes are computed as first differences across consecutive trading days.
+All calculations are performed in Python using the yield data from Question 4.
+(i) Covariance matrix of yield levels.
+The covariance matrix of yield levels shows strong positive covariances across maturities.
+This reflects the fact that yields at different maturities tend to move together over time.
+Longer maturities generally exhibit larger covariances, indicating higher variability in yield levels.
+(ii) Covariance matrix of daily yield changes.
+Compared to yield levels, the covariance matrix of daily yield changes has smaller magnitudes.
+This is expected since differencing removes common level effects and reduces non-stationarity.
+Nevertheless, positive covariances across maturities remain, suggesting common underlying factors driving yield movements.
+
+\subsection*{Question 6: Eigenvalues and Eigenvectors (5 points)}
+We compute the eigenvalues and eigenvectors of the covariance matrix of daily yield changes.
+The eigenvalues measure how much variation is explained by each principal component, while the eigenvectors represent factor loadings across maturities.
+The results show that the first principal component explains approximately 59\% of the total variance. The second and third components explain about 22\% and 14\%, respectively. Together, the first three components account for over 95\% of the total variation in daily yield changes.
+
+The loadings of the first component have the same sign across maturities, which corresponds to a parallel shift of the yield curve.
+The second component reflects changes in the slope, and the third component captures curvature effects.
+These findings are consistent with standard empirical results in term structure analysis.\\
+
+\section*{References}
+
+\begin{itemize}
+    \item Bond price and yield data retrieved from Business Insider Markets: \url{https://markets.businessinsider.com/bonds/finder?borrower=71&maturity=midterm&yield=&bondtype=2,3,4,16&coupon=&currency=184&rating=&country=19}
+\end{itemize}
+
+\noindent\textbf{Code availability.}  
+All Python code and data used in this assignment are available at:  
+\url{https://github.com/fayeeewang9/APM466-A1}
+
+\end{document}
+
